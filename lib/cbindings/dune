@@ -1,0 +1,21 @@
+(include_subdirs unqualified)
+
+(rule
+ (targets
+  xcb-ewmh_cflags.sexp
+  xcb-ewmh_clibrary_flags.sexp)
+ (action
+  (run ./config/discover.exe)))
+
+(library
+ (name cbindings)
+ (foreign_stubs
+  (language c)
+  (names caml_xcb)
+  (flags
+   (-Wall)
+   (-std=c99)
+   (-fPIC)
+   (:include xcb-ewmh_cflags.sexp)))
+ (c_library_flags
+  (:include xcb-ewmh_clibrary_flags.sexp)))
