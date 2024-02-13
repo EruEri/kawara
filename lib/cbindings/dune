@@ -1,9 +1,7 @@
 (include_subdirs unqualified)
 
 (rule
- (targets
-  xcb-ewmh_cflags.sexp
-  xcb-ewmh_clibrary_flags.sexp)
+ (targets xcb-ewmh_cflags.sexp xcb-ewmh_clibrary_flags.sexp)
  (action
   (run ./config/discover.exe)))
 

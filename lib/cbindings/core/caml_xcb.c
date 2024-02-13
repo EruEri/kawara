@@ -130,16 +130,16 @@ CAMLprim value caml_xcb_ewmh_get_current_desktop(value caml_ewmh) {
 }
 
 CAMLprim value caml_xcb_ewmh_get_desktop_geometry(value caml_ewmh, value caml_desktop_index) {
-    CAMLparam1(caml_ewmh);
+    CAMLparam2(caml_ewmh, caml_desktop_index);
     CAMLlocal2(caml_option, caml_dimension);
     caml_option = Val_none;
     xcb_ewmh_connection_t* ewmh = xcb_ewmh_connection_of_value(caml_ewmh);
     int screen_nbr = Long_val(caml_desktop_index);
     uint32_t width;
     uint32_t height;
-    xcb_get_property_cookie_t desktop_cookie = xcb_ewmh_get_desktop_geometry(ewmh, screen_nbr);
+    xcb_get_property_cookie_t desktop_cookie = xcb_ewmh_get_desktop_geometry(ewmh, 0);
     uint8_t status = xcb_ewmh_get_desktop_geometry_reply(ewmh,  desktop_cookie, &width, &height, NULL);
-    if (!status) {
+    if (status != 1) {
         CAMLreturn(caml_option);
     }
     caml_dimension = caml_alloc_2(0, Long_val(width), Long_val(height));

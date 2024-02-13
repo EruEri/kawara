@@ -17,3 +17,4 @@
 
 
 module Xcb = Xcb
+module Ewmh = Ewmh
