@@ -147,6 +147,32 @@ CAMLprim value caml_xcb_ewmh_get_desktop_geometry(value caml_ewmh, value caml_de
     CAMLreturn(caml_option);
 }
 
+CAMLprim value caml_xcb_ewmh_connection_get_desktop_layout(value caml_ewmh, value caml_desktop_index) {
+    CAMLparam2(caml_ewmh, caml_desktop_index);
+    CAMLlocal2(caml_option, caml_dimension);
+    caml_option = Val_none;
+    xcb_ewmh_connection_t* ewmh = xcb_ewmh_connection_of_value(caml_ewmh);
+    int screen_nbr = Long_val(caml_desktop_index);
+    xcb_get_property_cookie_t desktop_cookie = xcb_ewmh_get_desktop_layout(ewmh, 0);
+    xcb_ewmh_get_desktop_layout_reply_t desktop_layouts = {};
+    uint8_t status = xcb_ewmh_get_desktop_layout_reply(
+        ewmh, 
+        desktop_cookie, 
+        &desktop_layouts, 
+        NULL
+    );
+    if (status != 1) {
+        CAMLreturn(caml_option);
+    }
+    value orientation = Val_long(desktop_layouts.orientation);
+    value columns = Val_long(desktop_layouts.columns);
+    value rows = Val_long(desktop_layouts.rows);
+    value starting_corner = Val_long(desktop_layouts.starting_corner);
+    caml_dimension = caml_alloc_4(0, orientation, columns, rows, starting_corner);
+    caml_option = caml_alloc_some(caml_dimension);
+    CAMLreturn(caml_option);
+}
+
 CAMLprim value caml_wait_event(value caml_ewmh) {
     CAMLparam1(caml_ewmh);
     CAMLlocal2(caml_event, caml_option);
@@ -161,4 +187,5 @@ CAMLprim value caml_wait_event(value caml_ewmh) {
     CAMLreturn(caml_option);
 }
 
-CAMLprim value caml_free_event(value caml) {}
+CAMLprim value caml_free_event(value caml) {
+}

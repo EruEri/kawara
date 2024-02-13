@@ -16,13 +16,6 @@
 (**********************************************************************************************)
 
 
-external current_desktop : Xcb.xcb_ewmh_connection -> int option = "caml_xcb_ewmh_get_current_desktop"
-
-(*
-width, height   
-*)
-external desktop_dimension : Xcb.xcb_ewmh_connection -> int -> (int * int) option = "caml_xcb_ewmh_get_desktop_geometry"
-
 type xbc_any_event
 
 type xbc_button_press_event
@@ -32,3 +25,22 @@ type xcb_generic_event =
 | XcbAnyEvent of xbc_any_event
 | XcbButtonPress of xbc_button_press_event
 | XcbCreateNotify of xbc_create_notify_event
+
+
+type desktop_layout = {
+  orientation: int;
+  columns: int;
+  rows: int;
+  starting_corner: int
+}
+
+
+external current_desktop : Xcb.xcb_ewmh_connection -> int option = "caml_xcb_ewmh_get_current_desktop"
+
+(*
+width, height   
+*)
+external desktop_dimension : Xcb.xcb_ewmh_connection -> int -> (int * int) option = "caml_xcb_ewmh_get_desktop_geometry"
+
+external desktop_layout: Xcb.xcb_ewmh_connection -> int -> desktop_layout option = "caml_xcb_ewmh_connection_get_desktop_layout"
+
