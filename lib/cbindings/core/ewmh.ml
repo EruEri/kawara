@@ -34,9 +34,17 @@ type desktop_layout = {
   starting_corner: int
 }
 
+type geometry = {
+  x: int;
+  y: int;
+  width: int;
+  height: int;
+}
+
 
 external current_desktop : Xcb.xcb_ewmh_connection -> int option = "caml_xcb_ewmh_get_current_desktop"
 
+external number_of_desktops: Xcb.xcb_ewmh_connection -> int -> int option = "caml_xcb_ewmh_get_number_of_desktops"
 (*
 width, height   
 *)
@@ -44,3 +52,4 @@ external desktop_dimension : Xcb.xcb_ewmh_connection -> int -> (int * int) optio
 
 external desktop_layout: Xcb.xcb_ewmh_connection -> int -> desktop_layout option = "caml_xcb_ewmh_connection_get_desktop_layout"
 
+external workareas: Xcb.xcb_ewmh_connection -> int -> geometry array option = "caml_xcb_get_workarea"

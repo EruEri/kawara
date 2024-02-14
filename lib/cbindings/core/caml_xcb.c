@@ -129,6 +129,47 @@ CAMLprim value caml_xcb_ewmh_get_current_desktop(value caml_ewmh) {
     CAMLreturn(caml_option);
 }
 
+CAMLprim value caml_xcb_ewmh_get_number_of_desktops(value caml_ewmh, value caml_screen_nbr) {
+    CAMLparam2(caml_ewmh, caml_screen_nbr);
+    CAMLlocal2(caml_option, caml_dimension); 
+    caml_option = Val_none;
+    xcb_ewmh_connection_t* ewmh = xcb_ewmh_connection_of_value(caml_ewmh);
+    xcb_get_property_cookie_t cookie = xcb_ewmh_get_number_of_desktops(ewmh, 0);
+    uint32_t number_of_desktops;
+    int status = xcb_ewmh_get_number_of_desktops_reply(ewmh, cookie, &number_of_desktops, NULL);
+    if (!status) {
+        CAMLreturn(caml_option);
+    }
+    caml_option = caml_alloc_some(Val_long(number_of_desktops));
+    CAMLreturn(caml_option);
+}
+
+CAMLprim value caml_xcb_get_workarea(value caml_ewmh, value caml_screen_nbr) {
+    CAMLparam2(caml_ewmh, caml_screen_nbr);
+    CAMLlocal2(caml_option, caml_array); 
+    caml_option = Val_none;
+    xcb_ewmh_connection_t* ewmh = xcb_ewmh_connection_of_value(caml_ewmh);
+    xcb_get_property_cookie_t cookie = xcb_ewmh_get_workarea( ewmh, 0);
+    xcb_ewmh_get_workarea_reply_t working_aera = {};
+    int status = xcb_ewmh_get_workarea_reply(ewmh, cookie, &working_aera, NULL);
+    if (!status) {
+        CAMLreturn(caml_option);
+    }
+
+    caml_array = caml_alloc(working_aera.workarea_len, 0);
+    for (uint32_t i = 0; i < working_aera.workarea_len; i += 1) {
+        xcb_ewmh_geometry_t geomery = working_aera.workarea[i];
+        value caml_geometry = caml_alloc(4, 0);
+        Field(caml_geometry, 0) = Val_long(geomery.x);
+        Field(caml_geometry, 1) = Val_long(geomery.y);
+        Field(caml_geometry, 2) = Val_long(geomery.width);
+        Field(caml_geometry, 3) = Val_long(geomery.height);
+        Field(caml_array, i) = caml_geometry;
+    }
+    caml_option = caml_alloc_some(caml_array);
+    CAMLreturn(caml_option);
+}
+
 CAMLprim value caml_xcb_ewmh_get_desktop_geometry(value caml_ewmh, value caml_desktop_index) {
     CAMLparam2(caml_ewmh, caml_desktop_index);
     CAMLlocal2(caml_option, caml_dimension);
@@ -187,5 +228,5 @@ CAMLprim value caml_wait_event(value caml_ewmh) {
     CAMLreturn(caml_option);
 }
 
-CAMLprim value caml_free_event(value caml) {
-}
+// CAMLprim value caml_free_event(value caml) {
+// }
