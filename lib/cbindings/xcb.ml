@@ -15,9 +15,23 @@
 (*                                                                                            *)
 (**********************************************************************************************)
 
+
+module Window = struct
+  type t
+
+  external compare: t -> t -> int = "caml_xcb_window_compare"
+
+  let equal lhs rhs = compare lhs rhs = 0
+end
+
+
 type xcb_connection
 type xcb_ewmh_connection
-type xcb_event
+
+type xcb_event = 
+  | XcbIgnoreEvent
+  | XcbCreate of Window.t
+  | XcbDestroy of Window.t
 
 external xcb_connection: unit -> xcb_connection option = "caml_xcb_connection"
 external xcb_disconnect: xcb_connection -> unit = "caml_xcb_disconnect"

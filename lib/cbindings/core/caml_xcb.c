@@ -28,6 +28,7 @@
 
 #include "xcb/xcb.h"
 #include "xcb/xcb_ewmh.h"
+#include "xcb/xproto.h"
 
 static value value_of_xcb_connection(xcb_connection_t* connection) {
     value v = caml_alloc(1, Abstract_tag);
@@ -49,15 +50,15 @@ static xcb_ewmh_connection_t* xcb_ewmh_connection_of_value(value xbc_connection_
     return *((xcb_ewmh_connection_t **) Data_abstract_val(xbc_connection_ewmh));
 }
 
-static value value_of_xcb_generic_event(xcb_generic_event_t* event) {
-    value v = caml_alloc(1, Abstract_tag);
-    *((xcb_generic_event_t **) Data_abstract_val(v)) = event;
-    return v;
-}
+// static value value_of_xcb_generic_event(xcb_generic_event_t* event) {
+//     value v = caml_alloc(1, Abstract_tag);
+//     *((xcb_generic_event_t **) Data_abstract_val(v)) = event;
+//     return v;
+// }
 
-static xcb_generic_event_t* xcb_generic_event_of_value(value caml_event) {
-    return *((xcb_generic_event_t **) Data_abstract_val(caml_event));
-}
+// static xcb_generic_event_t* xcb_generic_event_of_value(value caml_event) {
+//     return *((xcb_generic_event_t **) Data_abstract_val(caml_event));
+// }
 
 
 CAMLprim value caml_xcb_connection(value caml_unit) {
@@ -178,7 +179,7 @@ CAMLprim value caml_xcb_ewmh_get_desktop_geometry(value caml_ewmh, value caml_de
     int screen_nbr = Long_val(caml_desktop_index);
     uint32_t width;
     uint32_t height;
-    xcb_get_property_cookie_t desktop_cookie = xcb_ewmh_get_desktop_geometry(ewmh, 0);
+    xcb_get_property_cookie_t desktop_cookie = xcb_ewmh_get_desktop_geometry(ewmh, screen_nbr);
     uint8_t status = xcb_ewmh_get_desktop_geometry_reply(ewmh,  desktop_cookie, &width, &height, NULL);
     if (status != 1) {
         CAMLreturn(caml_option);
@@ -194,7 +195,7 @@ CAMLprim value caml_xcb_ewmh_connection_get_desktop_layout(value caml_ewmh, valu
     caml_option = Val_none;
     xcb_ewmh_connection_t* ewmh = xcb_ewmh_connection_of_value(caml_ewmh);
     int screen_nbr = Long_val(caml_desktop_index);
-    xcb_get_property_cookie_t desktop_cookie = xcb_ewmh_get_desktop_layout(ewmh, 0);
+    xcb_get_property_cookie_t desktop_cookie = xcb_ewmh_get_desktop_layout(ewmh, screen_nbr);
     xcb_ewmh_get_desktop_layout_reply_t desktop_layouts = {};
     uint8_t status = xcb_ewmh_get_desktop_layout_reply(
         ewmh, 
@@ -220,12 +221,43 @@ CAMLprim value caml_wait_event(value caml_ewmh) {
     caml_option = Val_none;
     xcb_ewmh_connection_t* ewmh = xcb_ewmh_connection_of_value(caml_event);
     xcb_generic_event_t* event = xcb_wait_for_event(ewmh->connection);
-    if (event) {
-        caml_event = value_of_xcb_generic_event(event);
-        caml_option = caml_alloc_some(caml_event);
-    }
+    if (!event) CAMLreturn(caml_option);
 
+    switch (event->response_type & ~0x80) {
+    case XCB_CREATE_NOTIFY: {
+        xcb_create_notify_event_t* e = (xcb_create_notify_event_t*) event;  
+        // XcbCreate
+        // Block , Tag 0 
+        caml_event = caml_alloc_1(0, caml_copy_int32(e->window));
+        break;
+    }
+    case XCB_DESTROY_NOTIFY: {
+        xcb_destroy_notify_event_t* e = (xcb_destroy_notify_event_t*) event;  
+        // XcbDestroy
+        // Block , Tag 1
+        caml_event = caml_alloc_1(1, caml_copy_int32(e->window));
+        break;
+        break;
+    }
+    default:
+        // XcbIgnoreEvent
+        // Non block Tag 0
+        caml_event = Val_int(0);
+        break;
+    }
+    free((void *) event);
+    caml_option = caml_alloc_some(caml_event);
     CAMLreturn(caml_option);
+}
+
+CAMLprim value caml_xcb_window_compare(value caml_windows_lhs, value caml_windows_rhs) {
+    CAMLparam2(caml_windows_lhs, caml_windows_rhs);
+    uint32_t lhs = Int32_val(caml_windows_lhs);
+    uint32_t rhs = Int32_val(caml_windows_rhs);
+
+    if (lhs == rhs) { CAMLreturn(Val_int(0)); }
+    else if (lhs > rhs) { CAMLreturn(1); }
+    else { CAMLreturn(-1); }
 }
 
 // CAMLprim value caml_free_event(value caml) {
