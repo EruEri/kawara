@@ -27,3 +27,23 @@ let () = Printf.printf "Number of desktop = %u\n" desktop_count
 let () = Array.iteri (fun i geometry -> 
   Printf.printf "index = %u, x = %u, y = %u, width = %u, height = %u\n" i geometry.Cbindings.Ewmh.x geometry.y geometry.width geometry.height
   ) @@ getm "Working areas" @@ Cbindings.Ewmh.workareas ewmh 0
+
+
+let () = flush stdout
+
+let rec event () = 
+  let () =  match Cbindings.Xcb.wait_event ewmh with
+  | None -> Printf.eprintf "Event error : \n"
+  | Some XcbIgnoreEvent -> Printf.printf "ignore event : \n"
+  | Some XcbCreate window -> 
+    Printf.printf "Create windows : %lu\n" (Obj.magic window)
+  | Some XcbDestroy window -> 
+      Printf.printf "Destropy windows : %lu\n" (Obj.magic window) 
+  in
+  let () = flush stdout in
+  event ()
+
+let () = event ()
+
+  
+ 

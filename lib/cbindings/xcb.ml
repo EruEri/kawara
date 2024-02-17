@@ -38,4 +38,4 @@ external xcb_disconnect: xcb_connection -> unit = "caml_xcb_disconnect"
 external xcb_ewmh_connection_init: xcb_connection -> xcb_ewmh_connection option = "caml_xcb_ewmh_connection_init"
 external xcb_ewmh_connection_destroy: xcb_ewmh_connection -> unit = "caml_xcb_ewmh_connection_destroy"
 
-external wait_event : xcb_ewmh_connection -> xcb_event option = "caml_wait_event"
+external wait_event : xcb_ewmh_connection -> xcb_event option = "caml_xcb_wait_for_event"

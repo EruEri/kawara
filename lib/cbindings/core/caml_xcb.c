@@ -72,7 +72,6 @@ CAMLprim value caml_xcb_connection(value caml_unit) {
     } else {
         caml_option = Val_none;
     }
-
     CAMLreturn(caml_option);
 }
 
@@ -87,6 +86,12 @@ CAMLprim value caml_xcb_ewmh_connection_init(value caml_connection) {
         perror("Malloc");
         CAMLreturn(caml_option);
     }
+
+    const struct xcb_setup_t* setup = xcb_get_setup(connection);
+    xcb_screen_iterator_t screen_iterator = xcb_setup_roots_iterator(setup);
+    const static uint32_t values[] = { XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY |  XCB_EVENT_MASK_STRUCTURE_NOTIFY};
+    xcb_void_cookie_t cookie = xcb_change_window_attributes(connection, screen_iterator.data->root, XCB_CW_EVENT_MASK, values);
+    xcb_flush(connection);
 
     xcb_intern_atom_cookie_t* cookies = xcb_ewmh_init_atoms(connection, ewmh);
     int r = xcb_ewmh_init_atoms_replies(ewmh, cookies, NULL);
@@ -161,10 +166,10 @@ CAMLprim value caml_xcb_get_workarea(value caml_ewmh, value caml_screen_nbr) {
     for (uint32_t i = 0; i < working_aera.workarea_len; i += 1) {
         xcb_ewmh_geometry_t geomery = working_aera.workarea[i];
         value caml_geometry = caml_alloc(4, 0);
-        Field(caml_geometry, 0) = Val_long(geomery.x);
-        Field(caml_geometry, 1) = Val_long(geomery.y);
-        Field(caml_geometry, 2) = Val_long(geomery.width);
-        Field(caml_geometry, 3) = Val_long(geomery.height);
+        Store_field(caml_geometry, 0, Val_long(geomery.x));
+        Store_field(caml_geometry, 1, Val_long(geomery.y));
+        Store_field(caml_geometry, 2, Val_long(geomery.width));
+        Store_field(caml_geometry, 3, Val_long(geomery.height));
         Field(caml_array, i) = caml_geometry;
     }
     caml_option = caml_alloc_some(caml_array);
@@ -215,13 +220,13 @@ CAMLprim value caml_xcb_ewmh_connection_get_desktop_layout(value caml_ewmh, valu
     CAMLreturn(caml_option);
 }
 
-CAMLprim value caml_wait_event(value caml_ewmh) {
+CAMLprim value caml_xcb_wait_for_event(value caml_ewmh) {
     CAMLparam1(caml_ewmh);
     CAMLlocal2(caml_event, caml_option);
     caml_option = Val_none;
-    xcb_ewmh_connection_t* ewmh = xcb_ewmh_connection_of_value(caml_event);
+    xcb_ewmh_connection_t* ewmh = xcb_ewmh_connection_of_value(caml_ewmh);
     xcb_generic_event_t* event = xcb_wait_for_event(ewmh->connection);
-    if (!event) CAMLreturn(caml_option);
+    if (!event) {CAMLreturn(caml_option); }
 
     switch (event->response_type & ~0x80) {
     case XCB_CREATE_NOTIFY: {
@@ -236,7 +241,6 @@ CAMLprim value caml_wait_event(value caml_ewmh) {
         // XcbDestroy
         // Block , Tag 1
         caml_event = caml_alloc_1(1, caml_copy_int32(e->window));
-        break;
         break;
     }
     default:
