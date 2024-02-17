@@ -264,5 +264,32 @@ CAMLprim value caml_xcb_window_compare(value caml_windows_lhs, value caml_window
     else { CAMLreturn(-1); }
 }
 
-// CAMLprim value caml_free_event(value caml) {
-// }
+CAMLprim value caml_xcb_move_window(
+    value caml_ewmh, value caml_window, value caml_x,
+    value caml_y, value caml_width, value caml_height
+) {
+    CAMLparam5(caml_ewmh, caml_window, caml_x, caml_y, caml_width);
+    CAMLxparam1(caml_height);
+    xcb_ewmh_connection_t* ewmh = xcb_ewmh_connection_of_value(caml_ewmh);
+    xcb_window_t window = (uint32_t) Int32_val(caml_window);
+    int x = Int_val(caml_x);
+    int y = Int_val(caml_y);
+    int width = Int_val(caml_width);
+    int height = Int_val(caml_height);
+    const int values[] = {x, y, width, height};
+    uint16_t config = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
+    xcb_configure_window(
+        ewmh->connection, 
+        window, config, 
+        values
+    );
+
+    CAMLreturn(Val_unit);
+}
+
+CAMLprim value caml_xcb_move_window_bytecode(value* argv, int argn) {
+    return caml_xcb_move_window(
+        argv[0], argv[1], argv[2], argv[3], 
+        argv[4], argv[5]
+    );
+}

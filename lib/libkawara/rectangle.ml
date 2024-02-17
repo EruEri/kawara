@@ -15,34 +15,23 @@
 (*                                                                                            *)
 (**********************************************************************************************)
 
-type t = 
-  | Leaf of {
-    rectangle: Rectangle.t;
-    window: Cbindings.Xcb.Window.t option
-  }
-  | Node of {
-    lhs: t; 
-    rhs: t
-  }
-let empty rectangle = Leaf {rectangle; window = None}
+type t = {
+  x: int;
+  y: int;
+  width: int;
+  height: int;
+}
 
-let rec add orientation window = function
-  | Leaf {rectangle; window = None} -> Leaf {rectangle; window = Some window}
-  | Leaf {rectangle; window = Some _ as w } -> 
-    let (lhs, rhs) = Rectangle.divide orientation rectangle in 
-    Node {
-      lhs = Leaf {rectangle = lhs; window = w};
-      rhs = Leaf {rectangle = rhs; window = Some window}
-    }
-  | Node {lhs; rhs} -> 
-    Node {lhs; rhs = add (Orientation.toggle orientation) window rhs}
-
-
-let rec layout connection = function
-  | Leaf {rectangle = _; window = None} -> ()
-  | Leaf {rectangle; window = Some w } -> 
-    let Rectangle.{x; y; width; height} = rectangle in
-    Cbindings.Xcb.move_window connection w ~x ~y ~width ~height
-  | Node {lhs; rhs} -> 
-    let () = layout connection lhs in
-    layout connection rhs
+let divide orientation rectangle = 
+  let {x; y; width; height} = rectangle in
+  match orientation with
+  | Orientation.Vertical -> 
+    let new_width = width / 2 in
+    let lhs = {x; y; width = new_width; height} in
+    let rhs = {x = x + new_width; y; width = new_width; height} in
+    (lhs, rhs)
+  | Horizontal -> 
+    let new_height = height / 2 in
+    let top = {x; y; width; height = new_height} in 
+    let bottom = {x; y = y + new_height; width; height = new_height} in
+    (top, bottom)

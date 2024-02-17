@@ -39,3 +39,5 @@ external xcb_ewmh_connection_init: xcb_connection -> xcb_ewmh_connection option 
 external xcb_ewmh_connection_destroy: xcb_ewmh_connection -> unit = "caml_xcb_ewmh_connection_destroy"
 
 external wait_event : xcb_ewmh_connection -> xcb_event option = "caml_xcb_wait_for_event"
+
+external move_window: xcb_ewmh_connection -> Window.t -> x:int -> y:int -> width:int -> height:int -> unit = "caml_xcb_move_window_bytecode" "caml_xcb_move_window"

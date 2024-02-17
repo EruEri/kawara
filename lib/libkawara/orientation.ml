@@ -16,33 +16,9 @@
 (**********************************************************************************************)
 
 type t = 
-  | Leaf of {
-    rectangle: Rectangle.t;
-    window: Cbindings.Xcb.Window.t option
-  }
-  | Node of {
-    lhs: t; 
-    rhs: t
-  }
-let empty rectangle = Leaf {rectangle; window = None}
+  | Vertical
+  | Horizontal
 
-let rec add orientation window = function
-  | Leaf {rectangle; window = None} -> Leaf {rectangle; window = Some window}
-  | Leaf {rectangle; window = Some _ as w } -> 
-    let (lhs, rhs) = Rectangle.divide orientation rectangle in 
-    Node {
-      lhs = Leaf {rectangle = lhs; window = w};
-      rhs = Leaf {rectangle = rhs; window = Some window}
-    }
-  | Node {lhs; rhs} -> 
-    Node {lhs; rhs = add (Orientation.toggle orientation) window rhs}
-
-
-let rec layout connection = function
-  | Leaf {rectangle = _; window = None} -> ()
-  | Leaf {rectangle; window = Some w } -> 
-    let Rectangle.{x; y; width; height} = rectangle in
-    Cbindings.Xcb.move_window connection w ~x ~y ~width ~height
-  | Node {lhs; rhs} -> 
-    let () = layout connection lhs in
-    layout connection rhs
+let toggle = function
+| Vertical -> Horizontal
+| Horizontal -> Vertical

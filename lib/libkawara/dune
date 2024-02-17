@@ -1,2 +1,3 @@
 (library
- (name libkawara))
+ (name libkawara)
+ (libraries cbindings))
